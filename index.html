@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f6b36">
+<title>Rando</title>
+<meta name="description" content="Rando arma equipos parejos para el fútbol con amigos, con puntajes que salen de una encuesta entre todos.">
+<meta property="og:title" content="Rando">
+<meta property="og:description" content="Equipos parejos para el fútbol con amigos, con puntajes que salen de una encuesta entre todos.">
+<meta name="apple-mobile-web-app-title" content="Rando">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+:root{
+  /* cancha: verde de césped sintético, cal y tierra seca */
+  --cesped:#0f6b36; --tiza:#f8f8f3;
+  --tinta:#11291b; --suave:#566b5d; --fondo:#e9f0e3; --carta:#ffffff; --borde:#c9d6c2;
+  /* sol: el amarillo del Sol de Mayo, para lo que se toca */
+  --pechera:#f6b40e; --sobre-pechera:#2a1c00; --activo:#0f6b36; --foco:#0b3d20; --peligro:#b42318;
+  --display:"Barlow Condensed","Roboto Condensed","Arial Narrow",sans-serif;
+  --texto:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){
+  :root{--tinta:#e6efe8;--suave:#a3b8aa;--fondo:#0b1e14;--carta:#12291b;--borde:#27463a;--activo:#7fd69a;--foco:#f6b40e;--peligro:#ff8a7a}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--fondo);color:var(--tinta);font:400 17px/1.45 var(--texto)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--foco);outline-offset:2px}
+.top :focus-visible{outline-color:var(--tiza)}
+.pechera :focus-visible{outline-color:var(--bib-ink)}
+
+/* Cabecera: césped con la línea de cal abajo */
+.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;background:var(--cesped);color:var(--tiza);padding:calc(env(safe-area-inset-top,0px) + 10px) 10px 10px 16px;border-bottom:2px solid var(--tiza)}
+.top h1{flex:1;margin:0;font:700 2rem/1.05 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-t{flex:1;min-width:0;position:relative}
+.fecha-btn{display:block;max-width:100%;margin:0;padding:5px 0 4px;min-height:34px;background:none;border:0;color:var(--tiza);font:500 .9rem/1.2 var(--texto);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.fecha-in{position:absolute;left:0;top:0;width:1px;height:1px;padding:0;border:0;opacity:0;pointer-events:none}
+.icon-btn{width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:inherit;font-size:1.25rem;display:grid;place-items:center;cursor:pointer}
+.icon-btn[aria-pressed="true"]{background:rgba(255,255,255,.16)}
+.aviso{margin:0;padding:10px 16px;background:#fff1c9;color:#4a3800;font-size:.85rem}
+
+main{max-width:560px;margin:0 auto;padding:18px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+main.encuesta{padding-bottom:24px}
+section+section{margin-top:30px}
+h2{font:700 2.05rem/1.05 var(--display);margin:0 0 12px}
+h3{font:600 1.45rem/1.1 var(--display);margin:22px 0 8px}
+.sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 12px}
+.sec-head h2,.sec-head h3{margin-bottom:8px}
+.count{color:var(--suave);font-size:.9rem;white-space:nowrap}
+.lead{margin:0 0 14px;color:var(--suave);max-width:60ch}
+.hint{margin:8px 0 0;font-size:.85rem;color:var(--suave);max-width:60ch}
+.hint.err{color:var(--peligro)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--borde);background:var(--carta);border-radius:999px;padding:7px 14px;min-height:40px;font-weight:500;line-height:1.2;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--cesped);border-color:var(--cesped);color:var(--tiza)}
+.chip-x[aria-pressed="true"]{background:transparent;border-style:dashed;border-color:var(--suave);color:var(--suave);text-decoration:line-through}
+
+.btn{appearance:none;border:0;border-radius:12px;padding:11px 16px;min-height:48px;font-weight:600;line-height:1.15;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center;text-decoration:none}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-main{width:100%;background:var(--pechera);color:var(--sobre-pechera);font:700 1.55rem/1 var(--display)}
+.btn-sec{background:var(--carta);border:1.5px solid var(--borde);color:var(--tinta)}
+.btn-ghost{background:transparent;color:var(--suave)}
+.btn.sm{min-height:40px;padding:8px 12px;font-size:.9rem}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn-row>.btn{flex:1 1 0;min-width:0;padding-inline:10px}
+.btn-row>.btn-main{flex:2 1 0}
+.btn-row>.btn-sec{font-size:.95rem}
+.actions{display:flex;gap:8px;margin-top:18px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px}
+.link{background:none;border:0;padding:10px 0;color:var(--activo);font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.link.danger{color:var(--peligro)}
+.pie a{color:var(--suave)}
+
+.card{background:var(--carta);border:1px solid var(--borde);border-radius:16px;padding:16px;margin-top:14px}
+.card>h3:first-child{margin-top:0}
+label.f{display:block;margin:14px 0 6px;font-size:.88rem;color:var(--suave)}
+.card>label.f:first-child{margin-top:0}
+input[type=text],input[type=number],input[type=tel],textarea,select{width:100%;min-height:44px;padding:10px 12px;border:1.5px solid var(--borde);border-radius:10px;background:var(--fondo)}
+textarea{min-height:110px;resize:vertical}
+input[readonly]{font-size:.85rem;color:var(--suave)}
+input[type=range]{width:100%;accent-color:var(--pechera)}
+.check{display:flex;align-items:center;gap:10px;margin-top:12px}
+.check input{width:20px;height:20px;accent-color:var(--cesped)}
+.inline-form{display:grid;grid-template-columns:1fr 6.5rem;gap:8px}
+.inline-form .btn{grid-column:1/-1}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* Lista de jugadores */
+.list{background:var(--carta);border:1px solid var(--borde);border-radius:16px;overflow:hidden;margin-top:14px}
+.prow+.prow{border-top:1px solid var(--borde)}
+.row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;background:none;border:0;text-align:left;cursor:pointer}
+.who{flex:1;min-width:0}
+.nm{display:block;font-weight:600}
+.meta{display:block;font-size:.8rem;color:var(--suave)}
+.score{font:700 1.95rem/1 var(--display);font-variant-numeric:tabular-nums;min-width:2.6ch;text-align:right}
+.score.prov{color:var(--suave)}
+.edit{padding:0 14px 16px}
+/* modo discreto: solo se esconden los puntajes de cada jugador en la pestaña Jugadores */
+body.discreto .score,body.discreto #e-base{filter:blur(7px)}
+body.discreto #e-base:focus{filter:none}
+
+/* Pecheras: el resultado */
+.resultado{scroll-margin-top:96px}
+.pecheras{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:16px}
+.pechera{--bib:#f7f7f2;--bib-ink:#163022;--mesh:rgba(22,48,34,.08);position:relative;background-color:var(--bib);background-image:radial-gradient(var(--mesh) 1.1px,transparent 1.5px);background-size:6px 6px;color:var(--bib-ink);border-radius:22px 22px 14px 14px;padding:26px 10px 14px;box-shadow:inset 0 0 0 1.5px rgba(22,48,34,.12)}
+.pechera::before{content:"";position:absolute;top:-1px;left:50%;width:58px;height:19px;transform:translateX(-50%);background:var(--fondo);border-radius:0 0 30px 30px}
+.pechera h3{margin:0 0 8px;font:700 2.25rem/1 var(--display);text-align:center;overflow-wrap:anywhere}
+.pechera ol{list-style:none;margin:0;padding:0}
+.pechera li button{display:block;width:100%;min-height:40px;padding:6px 8px;border:0;border-radius:10px;background:transparent;color:inherit;font:600 1.1rem/1.2 var(--texto);text-align:left;cursor:pointer;overflow-wrap:anywhere}
+.pechera li button[aria-pressed="true"]{background:var(--pechera);color:var(--sobre-pechera)}
+.pechera .prom{margin:10px 0 0;font-size:.85rem;text-align:center;opacity:.85}
+.meta-line{margin:14px 0 0;font-size:.92rem}
+@keyframes caer{from{transform:translateY(-10px);opacity:0}to{transform:none;opacity:1}}
+.pecheras.nuevo .pechera{animation:caer .32s cubic-bezier(.2,.8,.3,1) both}
+.pecheras.nuevo .pechera+.pechera{animation-delay:.07s}
+@media (prefers-reduced-motion:reduce){.pecheras.nuevo .pechera{animation:none}}
+
+/* Encuesta */
+.pasos{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:.85rem;color:var(--suave)}
+.pasos .bar{flex:1}
+.bar{height:6px;border-radius:99px;background:var(--borde);overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--cesped)}
+.svc .bar{margin:2px 0 4px}
+.q{padding:12px 0;border-top:1px solid var(--borde)}
+.q:first-child{border-top:0}
+.qn{font-weight:600;margin-bottom:6px}
+.rate{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.rate button{min-height:38px;padding:0;border:1.5px solid var(--borde);border-radius:8px;background:var(--carta);font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer}
+.rate button[aria-pressed="true"]{background:var(--pechera);border-color:var(--pechera);color:var(--sobre-pechera)}
+.sticky{position:sticky;bottom:0;margin:16px -16px 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--fondo) 72%,transparent)}
+.code{margin:14px 0 0;padding:10px 12px;font:600 .95rem/1.4 ui-monospace,Menlo,Consolas,monospace;word-break:break-all;background:var(--carta);border:1px dashed var(--borde);border-radius:10px}
+
+/* Historial */
+.mt{display:grid;grid-template-columns:auto 1fr 5.5rem;align-items:center;gap:6px 10px;padding:10px 0;border-top:1px solid var(--borde)}
+.match .sec-head+.mt{border-top:0}
+.mt p{grid-column:1/-1;margin:0;font-size:.9rem;color:var(--suave)}
+.sw{width:14px;height:14px;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+
+/* Ajustes */
+.attr{display:grid;gap:8px;padding:12px 0;border-top:1px solid var(--borde)}
+.attr:first-child{border-top:0;padding-top:0}
+.attr-opts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.attr-opts select{flex:1 1 10rem;width:auto}
+.attr-opts .w{display:flex;align-items:center;gap:6px;font-size:.88rem;color:var(--suave)}
+.attr-opts .w input{width:4.5rem}
+.defs{margin:14px 0 0;padding-top:4px;border-top:1px solid var(--borde)}
+.defs dt{margin-top:12px;font-weight:600}
+.defs dd{margin:2px 0 0;font-size:.88rem;color:var(--suave);max-width:60ch}
+.how{margin:0 0 18px;padding-left:1.25em;color:var(--suave);max-width:60ch}
+.how li+li{margin-top:6px}
+.how strong{color:var(--tinta);font-weight:600}
+a.link{display:inline-block}
+.prose ol{margin:0;padding-left:1.2em}
+.prose li+li{margin-top:8px}
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+.empty{padding:24px 0}
+.empty p{color:var(--suave);max-width:46ch}
+
+/* Barra de navegación */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;justify-content:center;background:var(--carta);border-top:1px solid var(--borde);padding:0 4px env(safe-area-inset-bottom,0px)}
+.nav button{flex:1;max-width:110px;min-height:58px;padding:7px 2px 8px;border:0;background:none;color:var(--suave);font-size:.76rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.nav button[aria-current="page"]{color:var(--activo);font-weight:700}
+.nav .ico{font-size:1.3rem;line-height:1;filter:grayscale(1);opacity:.65}
+.nav button[aria-current="page"] .ico{filter:none;opacity:1}
+
+.toast{position:fixed;left:0;right:0;bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:30;width:fit-content;max-width:calc(100% - 32px);margin:0 auto;padding:10px 16px;border-radius:999px;background:#163022;color:#f7f7f2;font-size:.9rem;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.toast[hidden]{display:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<noscript><p style="padding:16px">Esta página necesita JavaScript.</p></noscript>
+<script>
+'use strict';
+/* ==========================================================================
+   Rando
+   Arma equipos de fútbol parejos con puntajes que salen de una encuesta
+   entre todos los jugadores. Todo vive en el navegador (localStorage):
+   nada de los jugadores ni de los puntajes se sube a ningún servidor.
+   ========================================================================== */
+
+const KEY = 'equipos-parejos-v1';
+const PRIOR_W = 2;       // un puntaje manual pesa como 2 evaluaciones
+const RATER_SHRINK = 2;  // el sesgo de quien puntúa a pocos se toma con cautela
+const MIN_RATERS = 3;    // con menos evaluaciones, el nivel queda como provisorio
+const MAX_PLAYERS = 22;  // hasta fútbol 11
+
+/* ---------- Almacenamiento (si el navegador no deja guardar, sigue en memoria) ---------- */
+const store = {
+  get(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { window.localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  del(k) { try { window.localStorage.removeItem(k); } catch (e) { /* nada */ } },
+};
+
+/* ---------- Utilidades ---------- */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN;
+const sdev = a => { if (a.length < 2) return 0; const m = mean(a); return Math.sqrt(mean(a.map(x => (x - m) ** 2))); };
+const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
+const fmt = (x, d = 1) => (x == null || !isFinite(x)) ? '–' : x.toFixed(d).replace('.', ',');
+const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+const byName = (a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+const num = v => { const x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : null; };
+
+function rid(n = 6) {
+  const abc = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const r = new Uint8Array(n);
+  try { crypto.getRandomValues(r); } catch (e) { for (let i = 0; i < n; i++) r[i] = Math.floor(Math.random() * 256); }
+  let out = '';
+  for (const x of r) out += abc[x % 36];
+  return out;
+}
+function groupBy(arr, f) {
+  const m = new Map();
+  for (const x of arr) { const k = f(x); if (!m.has(k)) m.set(k, []); m.get(k).push(x); }
+  return m;
+}
+// Media recortada: con 5 o más notas descarta las más extremas de cada punta.
+function trimmedMean(v) {
+  const s = [...v].sort((a, b) => a - b);
+  const n = s.length;
+  const k = n >= 5 ? Math.max(1, Math.floor(n * 0.15)) : 0;
+  return mean(s.slice(k, n - k));
+}
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function fmtDate(ts) { return new Date(ts).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }); }
+
+// base64 apto para URL, con soporte de acentos
+function b64e(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64d(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+/* ---------- Estado ---------- */
+const DEFAULT_GRUPO = 'Rando';
+const DEFAULT_ATTRS = [
+  { id: 'tec', label: 'Técnica', help: 'Control, pase, gambeta, pegada.', kind: 'nivel', weight: 1 },
+  { id: 'fis', label: 'Físico', help: 'Velocidad, resistencia, ida y vuelta.', kind: 'nivel', weight: 1 },
+  { id: 'jue', label: 'Juego', help: 'Visión, ubicación, versatilidad, marca.', kind: 'nivel', weight: 1 },
+  { id: 'mor', label: 'Morfón', help: '1 = la suelta siempre, 10 = no la larga nunca.', kind: 'reparto', weight: 1 },
+];
+function initialState() {
+  return {
+    v: 1,
+    grupo: DEFAULT_GRUPO,
+    fecha: todayISO(),   // día del próximo partido
+    attrs: JSON.parse(JSON.stringify(DEFAULT_ATTRS)),
+    players: [],   // { id, name, base, gk, regular }
+    surveys: [],   // { id, created, playerIds, attrIds, payload, responses: { indice: valores } }
+    matches: [],   // { id, date, teams: [[ids],[ids]], names, score: [a,b] }
+    selected: [],
+    settings: { umbral: 0.10, equipos: ['Blanco', 'Verde'], tel: '', discreto: false },
+  };
+}
+function hydrate(s) {
+  const d = initialState();
+  Object.assign(d, s, { settings: Object.assign(d.settings, (s && s.settings) || {}) });
+  if (d.grupo === 'Fútbol del domingo' || d.grupo === 'Los de siempre') d.grupo = DEFAULT_GRUPO;   // nombres por defecto de versiones anteriores
+  // la fecha es la del próximo partido: si quedó vieja o rota, vuelve a hoy
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha) || d.fecha < todayISO()) d.fecha = todayISO();
+  return d;
+}
+function load() {
+  const raw = store.get(KEY);
+  if (!raw) return initialState();
+  try { return hydrate(JSON.parse(raw)); } catch (e) { return initialState(); }
+}
+let S = load();
+let persiste = true;
+function save() { persiste = store.set(KEY, JSON.stringify(S)) && persiste; }
+
+/* ==========================================================================
+   Puntajes
+   Por atributo se ajusta un modelo aditivo: nota = media + nivel del jugador
+   + sesgo del evaluador. Así se corrige al que pone todo 9 o todo 5, aunque
+   cada uno haya puntuado a un subconjunto distinto. El nivel de cada jugador
+   usa media recortada, para que una nota rencorosa (o amiga) no pese de más.
+   ========================================================================== */
+function collectRatings(state) {
+  const latest = new Map(); // evaluador|evaluado|atributo -> la nota más reciente
+  for (const sv of state.surveys) {
+    const np = sv.playerIds.length, na = sv.attrIds.length;
+    for (const [riStr, vals] of Object.entries(sv.responses || {})) {
+      const ri = +riStr, rater = sv.playerIds[ri];
+      if (!rater || typeof vals !== 'string' || vals.length !== np * na) continue;
+      for (let pi = 0; pi < np; pi++) {
+        if (pi === ri) continue;
+        for (let ai = 0; ai < na; ai++) {
+          const ch = vals[pi * na + ai];
+          const x = ch === 'A' ? 10 : ch.charCodeAt(0) - 48;
+          if (!(x >= 1 && x <= 10)) continue;
+          const key = rater + '|' + sv.playerIds[pi] + '|' + sv.attrIds[ai];
+          const prev = latest.get(key);
+          if (!prev || prev.t <= sv.created) latest.set(key, { r: rater, p: sv.playerIds[pi], a: sv.attrIds[ai], x, t: sv.created });
+        }
+      }
+    }
+  }
+  return [...latest.values()];
+}
+
+function fitAttribute(R) {
+  const xs = R.map(o => o.x);
+  const mu = mean(xs), sigma = Math.max(sdev(xs), 0.5);
+  const byP = groupBy(R, o => o.p), byR = groupBy(R, o => o.r);
+  const q = new Map([...byP.keys()].map(k => [k, 0]));   // nivel relativo de cada jugador
+  const b = new Map([...byR.keys()].map(k => [k, 0]));   // sesgo de cada evaluador
+  for (let it = 0; it < 30; it++) {
+    for (const [p, list] of byP) q.set(p, trimmedMean(list.map(o => o.x - mu - b.get(o.r))));
+    for (const [r, list] of byR) {
+      let s = 0;
+      for (const o of list) s += o.x - mu - q.get(o.p);
+      b.set(r, s / (list.length + RATER_SHRINK));
+    }
+    const mb = mean([...b.values()]);
+    for (const [r, v] of b) b.set(r, v - mb);
+  }
+  const players = new Map();
+  for (const [p, list] of byP) players.set(p, { s: mu + q.get(p), n: list.length });
+  return { mu, sigma, players, bias: b };
+}
+
+function computeScores(state) {
+  const R = collectRatings(state);
+  const attrStats = {}, perAttr = {};
+  for (const a of state.attrs) {
+    const Ra = R.filter(o => o.a === a.id);
+    if (Ra.length < 3) { attrStats[a.id] = null; continue; }
+    const fit = fitAttribute(Ra);
+    attrStats[a.id] = { mu: fit.mu, sigma: fit.sigma };
+    perAttr[a.id] = fit.players;
+  }
+  const nivelAttrs = state.attrs.filter(a => a.kind !== 'reparto' && attrStats[a.id]);
+
+  // Nivel que surge solo de la encuesta
+  const survey = new Map();
+  for (const pl of state.players) {
+    let sw = 0, sv = 0;
+    const ns = [];
+    for (const a of nivelAttrs) {
+      const e = perAttr[a.id].get(pl.id);
+      if (!e) continue;
+      const w = isFinite(+a.weight) ? +a.weight : 1;
+      if (w <= 0) continue;
+      sw += w; sv += w * e.s; ns.push(e.n);
+    }
+    if (sw > 0) survey.set(pl.id, { s: sv / sw, n: mean(ns) });
+  }
+
+  // Los puntajes manuales (los viejos, o los de invitados) se llevan a la escala de la encuesta
+  const both = state.players.filter(p => p.base != null && survey.has(p.id) && survey.get(p.id).n >= MIN_RATERS);
+  let cal = x => x;
+  if (both.length >= 4) {
+    const B = both.map(p => p.base), V = both.map(p => survey.get(p.id).s);
+    const mb = mean(B), mv = mean(V);
+    const ratio = clamp(sdev(V) / Math.max(sdev(B), 0.3), 0.5, 2);
+    cal = x => mv + ratio * (x - mb);
+  } else if (both.length >= 1) {
+    const off = mean(both.map(p => survey.get(p.id).s - p.base));
+    cal = x => x + off;
+  }
+  const solid = [...survey.values()].filter(e => e.n >= MIN_RATERS).map(e => e.s);
+  const bases = state.players.filter(p => p.base != null).map(p => cal(p.base));
+  const fallback = solid.length ? mean(solid) : bases.length ? mean(bases) : 6;
+
+  const out = { attrStats, fallback, byId: {} };
+  for (const pl of state.players) {
+    const prior = pl.base != null ? cal(pl.base) : fallback;
+    const sv = survey.get(pl.id);
+    const n = sv ? sv.n : 0;
+    const nivel = sv ? (n * sv.s + PRIOR_W * prior) / (n + PRIOR_W) : prior;
+    const attrs = {};
+    for (const a of state.attrs) {
+      const st = attrStats[a.id];
+      if (!st) continue;
+      const e = perAttr[a.id].get(pl.id);
+      attrs[a.id] = e ? (e.n * e.s + PRIOR_W * st.mu) / (e.n + PRIOR_W) : st.mu;
+    }
+    out.byId[pl.id] = { nivel, n, provisional: n < MIN_RATERS, attrs };
+  }
+  return out;
+}
+
+/* ==========================================================================
+   Armado de equipos
+   Se prueban todas las divisiones posibles (con 10 jugadores son 126), se
+   quedan las que entran en el umbral y se elige una al azar, así los equipos
+   cambian cada semana.
+   ========================================================================== */
+function makeTeams(ids, sc, state, opts = {}) {
+  const N = ids.length;
+  const kA = Math.floor(N / 2), kB = N - kA;
+  const byId = new Map(state.players.map(p => [p.id, p]));
+  const lvl = ids.map(id => sc.byId[id] ? sc.byId[id].nivel : sc.fallback);
+  const gk = ids.map(id => !!(byId.get(id) || {}).gk);
+  const gkTotal = gk.filter(Boolean).length;
+  const attrs = state.attrs.filter(a => sc.attrStats[a.id]);
+  const nNivel = Math.max(1, attrs.filter(a => a.kind !== 'reparto').length);
+  const vals = attrs.map(a => ids.map(id => sc.byId[id] ? sc.byId[id].attrs[a.id] : sc.attrStats[a.id].mu));
+  const wts = attrs.map(a => (a.kind === 'reparto' ? 1.5 : 1 / nNivel) / sc.attrStats[a.id].sigma);
+  const last = opts.last || null;
+  const lastSide = ids.map(id => !last ? -1 : last[0].includes(id) ? 0 : last[1].includes(id) ? 1 : -1);
+  const common = lastSide.filter(s => s >= 0).length;
+  const umbral = opts.umbral != null ? opts.umbral : state.settings.umbral;
+
+  const cands = [];
+  const limit = 1 << N;
+  let m = (1 << kA) - 1;
+  while (m < limit) {
+    // con cantidad par, el jugador 0 va siempre en A para no contar dos veces cada división
+    if (N % 2 === 1 || (m & 1)) {
+      let sA = 0, sB = 0, gA = 0;
+      for (let i = 0; i < N; i++) {
+        if (m & (1 << i)) { sA += lvl[i]; if (gk[i]) gA++; } else sB += lvl[i];
+      }
+      const d = Math.abs(sA / kA - sB / kB);
+      const gkOk = gkTotal < 2 || Math.abs(2 * gA - gkTotal) <= 1;
+      let sec = 0;
+      for (let j = 0; j < attrs.length; j++) {
+        let a = 0, b = 0;
+        const v = vals[j];
+        for (let i = 0; i < N; i++) { if (m & (1 << i)) a += v[i]; else b += v[i]; }
+        sec += wts[j] * Math.abs(a / kA - b / kB);
+      }
+      if (common >= 4) { // penaliza repetir casi igual el último partido
+        let same = 0;
+        for (let i = 0; i < N; i++) {
+          const s = lastSide[i];
+          if (s >= 0 && ((m & (1 << i)) ? 0 : 1) === s) same++;
+        }
+        const sim = Math.max(same, common - same) / common;
+        if (sim > 0.7) sec += 0.8 * (sim - 0.7) / 0.3;
+      }
+      cands.push({ m, d, gkOk, sec });
+    }
+    const c = m & -m, r = m + c; // siguiente combinación con kA bits (Gosper)
+    m = (((r ^ m) >>> 2) / c) | r;
+  }
+
+  let pool = cands.filter(c => c.gkOk);
+  if (!pool.length) pool = cands;
+  let ok = pool.filter(c => c.d <= umbral + 1e-9);
+  const okCount = ok.length;
+  if (!ok.length) ok = [...pool].sort((a, b) => a.d - b.d).slice(0, 3);
+  // entre las parejas, se queda con el 30% mejor repartido (mínimo 5), contando empates
+  ok.sort((a, b) => a.sec - b.sec);
+  const keep = Math.min(ok.length, Math.max(5, Math.ceil(ok.length * 0.3)));
+  const cutoff = ok[keep - 1].sec + 1e-9;
+  let choices = ok.filter(c => c.sec <= cutoff);
+  if (opts.avoid != null && choices.length > 1) choices = choices.filter(c => c.m !== opts.avoid);
+  const pick = choices[Math.floor(Math.random() * choices.length)];
+  const A = [], B = [];
+  ids.forEach((id, i) => (pick.m & (1 << i) ? A : B).push(id));
+  return { ids: ids.slice(), teams: [A, B], mask: pick.m, d: pick.d, total: cands.length, okCount };
+}
+
+/* ---------- Códigos de respuesta de la encuesta ---------- */
+function checksum(s) {
+  let h = 7;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 1296;
+  return h.toString(36).padStart(2, '0');
+}
+function makeCode(sid, ri, vals) {
+  const body = sid + '-' + ri.toString(36) + '-' + vals;
+  return 'EQ1-' + body + '-' + checksum(body);
+}
+const CODE_RE = /EQ1-([a-z0-9]{6})-([a-z0-9]{1,2})-([0-9A]+)-([a-z0-9]{2})(?![a-z0-9])/g;
+function parseCodes(text) {
+  const out = [];
+  for (const mm of String(text).matchAll(CODE_RE)) {
+    const [, sid, ri36, vals, chk] = mm;
+    out.push({ sid, ri: parseInt(ri36, 36), vals, valid: checksum(sid + '-' + ri36 + '-' + vals) === chk });
+  }
+  return out;
+}
+function loadResponses(text, state) {
+  const res = { ok: 0, bad: 0, otra: 0 };
+  for (const c of parseCodes(text)) {
+    const sv = state.surveys.find(s => s.id === c.sid);
+    if (!sv) { res.otra++; continue; }
+    if (!c.valid || c.vals.length !== sv.playerIds.length * sv.attrIds.length || c.ri >= sv.playerIds.length) { res.bad++; continue; }
+    sv.responses[c.ri] = c.vals;
+    res.ok++;
+  }
+  return res;
+}
+
+/* ---------- Importar listas (texto suelto, o un arreglo de registros Nombre/Puntaje) ---------- */
+function parseList(text) {
+  const t = String(text);
+  const pas = [...t.matchAll(/Nombre:\s*'([^']*)'\s*;\s*Puntaje:\s*([0-9]+(?:[.,][0-9]+)?)/gi)];
+  if (pas.length) return pas.map(mm => ({ name: mm[1].trim(), base: num(mm[2]) })).filter(o => o.name);
+  const out = [];
+  for (let line of t.split(/\r?\n/)) {
+    line = line.replace(/^\s*(?:[-•*]|\d+[.)])\s+/, '').trim();
+    if (!line) continue;
+    const mm = line.match(/^(.*?)[\s;,\t:]+(\d{1,2}(?:[.,]\d+)?)$/);
+    const b = mm ? num(mm[2]) : null;
+    if (mm && mm[1].trim() && b != null && b >= 1 && b <= 10) out.push({ name: mm[1].trim().replace(/[;,:]+$/, '').trim(), base: b });
+    else out.push({ name: line, base: null });
+  }
+  return out.filter(o => o.name);
+}
+function importList(items, state) {
+  let nuevos = 0, act = 0;
+  for (const it of items) {
+    const ex = state.players.find(p => norm(p.name) === norm(it.name));
+    if (ex) { if (it.base != null) ex.base = clamp(it.base, 1, 10); act++; }
+    else { state.players.push({ id: rid(8), name: it.name, base: it.base != null ? clamp(it.base, 1, 10) : null, gk: false, regular: true }); nuevos++; }
+  }
+  return { nuevos, act };
+}
+function playedCounts(state) {
+  const c = {};
+  for (const mt of state.matches) for (const t of mt.teams) for (const id of t) c[id] = (c[id] || 0) + 1;
+  return c;
+}
+
+/* ---------- Colores de pechera según el nombre del equipo ---------- */
+const BIBS = [
+  [/blanc/, '#f7f7f2', '#163022', 'rgba(22,48,34,.08)'],
+  [/verde/, '#1a7f43', '#f7f7f2', 'rgba(255,255,255,.09)'],
+  [/negr/, '#1d1f1e', '#f7f7f2', 'rgba(255,255,255,.08)'],
+  [/roj|colorad/, '#c62828', '#fff7f5', 'rgba(255,255,255,.1)'],
+  [/celest/, '#7cc3ee', '#0d2a3d', 'rgba(13,42,61,.1)'],
+  [/azul/, '#1e4fa3', '#f4f7ff', 'rgba(255,255,255,.1)'],
+  [/amarill/, '#f2c516', '#2b2300', 'rgba(43,35,0,.1)'],
+  [/naranj/, '#ff6a13', '#2a1405', 'rgba(42,20,5,.1)'],
+  [/violet|lila/, '#6a3fb5', '#f7f2ff', 'rgba(255,255,255,.1)'],
+  [/gris/, '#8b918d', '#14171a', 'rgba(20,23,26,.1)'],
+];
+function bib(name, i) {
+  const n = norm(name || '');
+  for (const [re, bg, ink, mesh] of BIBS) if (re.test(n)) return { bg, ink, mesh };
+  const d = BIBS[i === 0 ? 0 : 1];
+  return { bg: d[1], ink: d[2], mesh: d[3] };
+}
+
+/* ==========================================================================
+   Interfaz
+   ========================================================================== */
+let app = null;
+const ui = { view: 'partido', current: null, swapSel: null, open: null, showOthers: false, guestOpen: false, importing: false, sortBy: 'nombre', newSurvey: null, armed: null, anim: false, pendingImport: null };
+const playerById = id => S.players.find(p => p.id === id);
+const nameOf = id => (playerById(id) || {}).name || 'jugador borrado';
+function baseURL() { return location.href.split('#')[0]; }
+const enLinea = () => /^https?:$/.test(location.protocol);   // false en vistas previas (about:srcdoc) y archivos sueltos (file:)
+/* ---------- Teléfono: se escribe como se marca y se convierte al formato de WhatsApp ---------- */
+function normalizarTel(raw) {
+  const t = String(raw || '').trim();
+  const d = t.replace(/\D/g, '');
+  if (!d) return '';
+  if (t.startsWith('+')) return d;                       // internacional, tal cual
+  if (d.startsWith('00')) return d.slice(2);
+  const sin15 = r => {                                    // "11 15 2345 6789": el 15 va después del código de área
+    if (r.length === 12) for (const n of [2, 3, 4]) if (r.slice(n, n + 2) === '15') return r.slice(0, n) + r.slice(n + 2);
+    return r;
+  };
+  if (d.startsWith('54')) {
+    const r = d.slice(2);
+    return r.startsWith('9') ? '54' + r : '549' + sin15(r.replace(/^0/, ''));
+  }
+  const r = sin15(d.replace(/^0/, ''));
+  return r.length === 10 ? '549' + r : d;                // si no parece argentino, se deja como está
+}
+const telOk = t => t ? `WhatsApp va a abrir un chat con +${t}.` : '';
+
+/* ---------- Link de la encuesta: lo mínimo para armarla (los atributos de siempre viajan solo con su código) ---------- */
+function encodeSurvey({ s, g, p, a, w }) {
+  const attrs = a.map(x => {
+    const d = DEFAULT_ATTRS.find(y => y.id === x.id);
+    return d && d.label === x.label && (d.help || '') === (x.help || '') ? x.id : [x.label, x.help || ''];
+  });
+  return b64e(JSON.stringify([2, s, g, w || '', attrs, ...p]));
+}
+function decodeSurvey(txt) {
+  const [v, s, g, w, attrs, ...p] = JSON.parse(b64d(txt));
+  if (v !== 2 || !Array.isArray(attrs)) throw new Error('formato');
+  const a = attrs.map(x => {
+    if (Array.isArray(x)) return [String(x[0]), String(x[1] || '')];
+    const d = DEFAULT_ATTRS.find(y => y.id === x);
+    if (!d) throw new Error('atributo');
+    return [d.label, d.help || ''];
+  });
+  return { s, g, w, p: p.map(String), a };
+}
+function surveyURL(sv) { return baseURL() + (sv.v2 ? '#r=' : '#e=') + sv.payload; }   // #e= son los links de la primera versión
+function minutesFor(n, k) { const m = Math.round((n - 1) * k * 2.5 / 60); return m <= 1 ? 'un minuto' : `unos ${m} minutos`; }
+/* Mensajes para mandar por WhatsApp o Telegram.
+   Sin emojis: algunos caminos de compartir (como el menú de Windows) los
+   convierten en "�". El orden y los negritas hacen el trabajo visual. */
+const wa = s => `*${String(s).replace(/[*_~`]/g, '')}*`;   // negrita de WhatsApp
+const plain = s => String(s);
+function isoToDate(iso) { return new Date(iso + 'T12:00:00'); }
+// Para la cabecera: "Hoy, martes 6 de octubre", "Mañana, ..." o "Domingo 11 de octubre"
+function fechaHeader(iso) {
+  const dias = Math.round((isoToDate(iso) - isoToDate(todayISO())) / 86400000);
+  const f = fechaLarga(isoToDate(iso));
+  const baja = f.charAt(0).toLowerCase() + f.slice(1);
+  return dias === 0 ? 'Hoy, ' + baja : dias === 1 ? 'Mañana, ' + baja : f;
+}
+function fechaLarga(d = new Date()) {
+  const dia = d.toLocaleDateString('es-AR', { weekday: 'long' });
+  const mes = d.toLocaleDateString('es-AR', { month: 'long' });
+  return `${dia.charAt(0).toUpperCase()}${dia.slice(1)} ${d.getDate()} de ${mes}`;
+}
+function teamsMessage({ teams, names, grupo, fecha, nameOf, isGk, means, bold = wa }) {
+  const out = [bold(grupo), fechaLarga(fecha), ''];
+  teams.forEach((t, i) => {
+    out.push(`${bold(names[i])} (puntaje ${fmt(means[i], 2)})`);
+    t.forEach(id => out.push(`- ${nameOf(id)}${isGk(id) ? ' (arquero)' : ''}`));
+    out.push('');
+  });
+  out.push(bold === wa ? '_Armado con Rando_' : 'Armado con Rando');
+  return out.join('\n');
+}
+function currentTeamsMessage(sc, bold = wa) {
+  const c = ui.current;
+  return teamsMessage({
+    teams: c.teams, names: S.settings.equipos, grupo: S.grupo, fecha: isoToDate(S.fecha), bold,
+    nameOf: id => (playerById(id) || { name: '?' }).name,
+    isGk: id => !!(playerById(id) || {}).gk,
+    means: c.teams.map(t => mean(t.map(id => sc.byId[id] ? sc.byId[id].nivel : sc.fallback))),
+  });
+}
+function surveyMessage(sv, bold = wa) {
+  return `${bold(S.grupo)}\nEncuesta para armar los equipos${S.grupo === DEFAULT_GRUPO ? '' : ' con Rando'}.\n\n1. Abrí el link y elegí tu nombre.\n2. Puntuá a los demás del 1 al 10, te lleva ${minutesFor(sv.playerIds.length, sv.attrIds.length)}.\n3. Al final tocá "Enviar por WhatsApp" para mandarme tus puntajes.\n\nLa app no muestra los puntajes de cada uno, solo los combina.`;
+}
+// WhatsApp acepta solo texto; Telegram exige un link y lo pone al principio del mensaje.
+const waLink = (text, tel = '') => 'https://wa.me/' + tel + '?text=' + encodeURIComponent(text);
+const tgLink = (url, text) => 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text);
+
+let armTimer = null;
+// Confirmación de dos toques para lo que borra cosas
+function armed(key) {
+  if (ui.armed === key) { ui.armed = null; clearTimeout(armTimer); return true; }
+  ui.armed = key;
+  clearTimeout(armTimer);
+  armTimer = setTimeout(() => { ui.armed = null; render(); }, 3500);
+  render();
+  return false;
+}
+
+let toastTimer = null;
+function toast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 2800);
+}
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* sigue */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch (e) { return false; }
+}
+
+function empty(title, text, tab, cta) {
+  return `<section class="empty"><h2>${esc(title)}</h2><p>${esc(text)}</p>${tab ? `<button class="btn btn-main" data-act="tab" data-id="${tab}">${esc(cta)}</button>` : ''}</section>`;
+}
+
+/* ---------- Partido ---------- */
+function viewPartido(sc) {
+  if (!S.players.length) return empty('Todavía no hay jugadores', 'Cargalos en Jugadores. Podés pegar la lista entera de una, con o sin puntajes.', 'jugadores', 'Cargar jugadores');
+  const sel = new Set(S.selected.filter(id => playerById(id)));
+  const regs = S.players.filter(p => p.regular).sort(byName);
+  const others = S.players.filter(p => !p.regular).sort(byName);
+  const chip = p => `<button class="chip" data-act="toggleSel" data-id="${p.id}" aria-pressed="${sel.has(p.id)}">${esc(p.name)}${p.gk ? ' 🧤' : ''}</button>`;
+  const n = sel.size;
+  let h = `<section><div class="sec-head"><h2>¿Quiénes juegan?</h2><span class="count">${n} ${n === 1 ? 'elegido' : 'elegidos'}${n >= 4 ? `, ${Math.floor(n / 2)} contra ${Math.ceil(n / 2)}` : ''}</span></div>`;
+  h += `<div class="chips">${regs.map(chip).join('')}</div>`;
+  if (others.length) {
+    h += `<button class="link" data-act="toggleOthers" aria-expanded="${ui.showOthers}">${ui.showOthers ? 'Ocultar ocasionales' : `Ver ocasionales (${others.length})`}</button>`;
+    if (ui.showOthers) h += `<div class="chips">${others.map(chip).join('')}</div>`;
+  }
+  h += `<button class="link" data-act="toggleGuest" aria-expanded="${ui.guestOpen}" style="display:block">Sumar un invitado nuevo</button>`;
+  if (ui.guestOpen) {
+    h += `<div class="card"><div class="inline-form"><input type="text" id="g-name" placeholder="Nombre" autocomplete="off" aria-label="Nombre del invitado" data-enter="addGuest"><input type="number" id="g-lvl" placeholder="Nivel" inputmode="decimal" step="0.5" min="1" max="10" aria-label="Nivel del invitado" data-enter="addGuest"><button class="btn btn-sec" data-act="addGuest">Sumar</button></div><p class="hint">Si no ponés nivel, entra con el promedio del grupo (${fmt(sc.fallback)}) hasta que lo puntúen.</p></div>`;
+  }
+  h += `<div class="actions"><button class="btn btn-main" data-act="generate" ${n < 4 || n > MAX_PLAYERS ? 'disabled' : ''}>Armar equipos</button>${n ? '<button class="btn btn-ghost" data-act="clearSel">Limpiar</button>' : ''}</div>`;
+  if (n > MAX_PLAYERS) h += `<p class="hint err">Máximo ${MAX_PLAYERS} jugadores por partido.</p>`;
+  else if (n > 0 && n < 4) h += `<p class="hint">Elegí al menos 4.</p>`;
+  h += `</section>`;
+  if (ui.current) h += resultHTML(sc, sel);
+  return h;
+}
+
+function resultHTML(sc, sel) {
+  const c = ui.current;
+  const teams = c.teams.map(t => t.filter(id => sc.byId[id]));
+  const means = teams.map(t => mean(t.map(id => sc.byId[id].nivel)));
+  const d = Math.abs(means[0] - means[1]);
+  const names = S.settings.equipos;
+  const stale = sel.size !== c.ids.length || c.ids.some(id => !sel.has(id));
+  const team = (t, i) => {
+    const st = bib(names[i], i);
+    return `<div class="pechera" style="--bib:${st.bg};--bib-ink:${st.ink};--mesh:${st.mesh}">
+      <h3>${esc(names[i])}</h3>
+      <ol>${t.map(id => { const p = playerById(id); return `<li><button data-act="swap" data-id="${id}" aria-pressed="${ui.swapSel === id}">${esc(p.name)}${p.gk ? ' 🧤' : ''}</button></li>`; }).join('')}</ol>
+      <p class="prom">Puntaje <span class="num">${fmt(means[i], 2)}</span></p></div>`;
+  };
+  let meta;
+  if (c.manual) meta = `Ajustado a mano. Diferencia: <span class="num">${fmt(d, 2)}</span>.`;
+  else if (!c.okCount) meta = `Ninguna división quedó por debajo de ${fmt(S.settings.umbral, 2)}, así que salió una de las más parejas. Diferencia: <span class="num">${fmt(d, 2)}</span>.`;
+  else meta = `Diferencia: <span class="num">${fmt(d, 2)}</span>. Había ${c.okCount} de ${c.total} divisiones dentro del umbral y salió una al azar.`;
+  return `<section class="resultado">
+    ${stale ? '<p class="hint err">Cambió la lista de los que juegan: tocá Armar equipos de nuevo.</p>' : ''}
+    <div class="pecheras${ui.anim ? ' nuevo' : ''}">${teams.map(team).join('')}</div>
+    <p class="meta-line">${meta}</p>
+    <p class="hint">Para cambiar a alguien, tocalo y después tocá a quien pasa al otro equipo.</p>
+    <div class="btn-row"><button class="btn btn-sec" data-act="reroll">Otra opción</button><button class="btn btn-sec" data-act="saveMatch" ${c.saved ? 'disabled' : ''}>${c.saved ? 'Guardado' : 'Guardar'}</button></div>
+    <p class="hint">Mandar los equipos por</p>
+    <div class="btn-row" style="margin-top:6px"><a class="btn btn-sec" href="${esc(waLink(currentTeamsMessage(sc)))}" target="_blank" rel="noopener">WhatsApp</a>${enLinea() ? `<a class="btn btn-sec" href="${esc(tgLink(baseURL(), currentTeamsMessage(sc, plain)))}" target="_blank" rel="noopener">Telegram</a>` : '<button class="btn btn-sec" disabled title="Telegram necesita que Rando esté publicada en internet">Telegram</button>'}<button class="btn btn-sec" data-act="copyTeams">Copiar</button></div>
+  </section>`;
+}
+
+/* ---------- Jugadores ---------- */
+function viewJugadores(sc) {
+  const pj = playedCounts(S);
+  const list = [...S.players].sort(ui.sortBy === 'nivel' ? (a, b) => sc.byId[b.id].nivel - sc.byId[a.id].nivel : byName);
+  const importOpen = ui.importing || !S.players.length;
+  let h = `<section><div class="sec-head"><h2>Jugadores</h2><span class="count">${S.players.length}</span></div>`;
+  h += `<div class="toolbar">${S.players.length ? `<button class="btn btn-sec sm" data-act="sort">${ui.sortBy === 'nivel' ? 'Ordenar por nombre' : 'Ordenar por nivel'}</button>` : ''}${S.players.length ? `<button class="btn btn-sec sm" data-act="toggleImport" aria-expanded="${importOpen}">Importar lista</button>` : ''}</div>`;
+  if (importOpen) {
+    h += `<div class="card"><label class="f" for="imp">Pegá la lista: un jugador por línea, con o sin puntaje (por ejemplo "Pato 7,5").</label><textarea id="imp" placeholder="Pato 7,5&#10;Colo 6&#10;Rulo"></textarea><div class="btn-row"><button class="btn btn-main" data-act="doImport">Importar</button></div></div>`;
+  }
+  h += `<div class="card"><label class="f" for="np-name">Agregar jugador</label><div class="inline-form"><input type="text" id="np-name" placeholder="Nombre" autocomplete="off" data-enter="addPlayer"><input type="number" id="np-base" placeholder="Puntaje" inputmode="decimal" step="0.1" min="1" max="10" aria-label="Puntaje manual (opcional)" data-enter="addPlayer"><button class="btn btn-sec" data-act="addPlayer">Agregar</button></div></div>`;
+  if (S.players.length) h += `<div class="list">${list.map(p => playerRow(p, sc, pj)).join('')}</div>`;
+  return h + `</section>`;
+}
+function playerRow(p, sc, pj) {
+  const s = sc.byId[p.id], open = ui.open === p.id;
+  const n = Math.round(s.n);
+  const src = n > 0 ? `${n} ${n === 1 ? 'evaluación' : 'evaluaciones'}` : p.base != null ? 'puntaje manual' : 'sin datos, usa el promedio';
+  const extra = [pj[p.id] ? `${pj[p.id]} PJ` : '', !p.regular ? 'ocasional' : ''].filter(Boolean);
+  return `<div class="prow"><button class="row" data-act="openP" data-id="${p.id}" aria-expanded="${open}">
+    <span class="who"><span class="nm" id="nm-${p.id}">${esc(p.name)}${p.gk ? ' 🧤' : ''}</span><span class="meta">${esc([src, ...extra].join(', '))}</span></span>
+    <span class="score num${s.provisional ? ' prov' : ''}" id="sc-${p.id}">${fmt(s.nivel)}</span></button>${open ? editBox(p) : ''}</div>`;
+}
+function editBox(p) {
+  return `<div class="edit">
+    <label class="f" for="e-name">Nombre</label><input type="text" id="e-name" value="${esc(p.name)}" data-change="pname" data-id="${p.id}">
+    <label class="f" for="e-base">Puntaje manual (opcional)</label><input type="number" id="e-base" step="0.1" min="1" max="10" inputmode="decimal" value="${p.base != null ? p.base : ''}" data-change="pbase" data-id="${p.id}">
+    <p class="hint">Se usa mientras tenga pocas evaluaciones. Con la encuesta pesa cada vez menos.</p>
+    <label class="check"><input type="checkbox" data-change="pgk" data-id="${p.id}" ${p.gk ? 'checked' : ''}> Arquero fijo (se reparte uno por equipo)</label>
+    <label class="check"><input type="checkbox" data-change="preg" data-id="${p.id}" ${p.regular ? 'checked' : ''}> Habitual (aparece primero al armar)</label>
+    <button class="link danger" data-act="delP" data-id="${p.id}">${ui.armed === 'delP' + p.id ? 'Tocá de nuevo para borrarlo' : 'Borrar jugador'}</button>
+  </div>`;
+}
+
+/* ---------- Encuesta (lado de quien organiza) ---------- */
+function viewEncuesta() {
+  let h = `<section><h2>Encuesta</h2><ol class="how"><li><strong>Creá el link</strong> eligiendo quiénes entran.</li><li><strong>Mandalo al grupo.</strong> Cada uno elige su nombre, puntúa a los demás desde su celular y te manda un código por WhatsApp.</li><li><strong>Pegá acá los códigos</strong> que te lleguen. Podés pegar el chat entero.</li></ol>`;
+  if (S.players.length < 3) return h + `<p class="hint">Primero cargá al menos 3 jugadores.</p><div class="actions"><button class="btn btn-main" data-act="tab" data-id="jugadores">Cargar jugadores</button></div></section>`;
+  if (!enLinea()) h += `<button class="btn btn-main" disabled>Nueva encuesta</button><p class="hint err">Para crear una encuesta, Rando tiene que estar publicada en internet: el link que armaría esta copia no abre en ningún celular.</p>`;
+  else h += ui.newSurvey ? newSurveyForm() : `<button class="btn btn-main" data-act="startSurvey">Nueva encuesta</button>`;
+  h += S.surveys.map(surveyCard).join('');
+  return h + `</section>`;
+}
+function newSurveyForm() {
+  const ns = ui.newSurvey, n = ns.players.length, k = ns.attrs.length;
+  return `<div class="card"><h3>¿Quiénes entran?</h3><p class="hint">Todos los elegidos se puntúan entre sí. Cada uno puede saltear a los que no conoce.</p>
+    <div class="chips" style="margin-top:10px">${[...S.players].sort(byName).map(p => `<button class="chip" data-act="nsP" data-id="${p.id}" aria-pressed="${ns.players.includes(p.id)}">${esc(p.name)}</button>`).join('')}</div>
+    <h3>¿Qué se puntúa?</h3><div class="chips">${S.attrs.map(a => `<button class="chip" data-act="nsA" data-id="${a.id}" aria-pressed="${ns.attrs.includes(a.id)}">${esc(a.label)}</button>`).join('')}</div>
+    <p class="hint">${n} jugadores y ${k} ${k === 1 ? 'atributo' : 'atributos'}: a cada uno le lleva ${n > 1 && k ? minutesFor(n, k) : 'nada'}.</p>
+    <label class="f" for="ns-tel">Tu WhatsApp, para que las respuestas te lleguen directo (opcional)</label>
+    <input type="tel" id="ns-tel" inputmode="tel" placeholder="Por ejemplo 11 2345-6789" value="${esc(S.settings.tel)}" data-change="tel" data-input="tel" autocomplete="tel">
+    <p class="hint">Escribilo como lo marcás y se pasa solo al formato de WhatsApp. Si es de otro país, empezá con +. Si lo dejás vacío, cada uno elige a quién mandarlo.</p>
+    <p class="hint" id="tel-ok">${esc(telOk(S.settings.tel))}</p>
+    <div class="btn-row"><button class="btn btn-ghost" data-act="cancelSurvey">Cancelar</button><button class="btn btn-main" data-act="createSurvey">Crear link</button></div></div>`;
+}
+function surveyCard(sv) {
+  const n = sv.playerIds.length, got = Object.keys(sv.responses).length;
+  const faltan = sv.playerIds.filter((_, i) => !(i in sv.responses)).map(nameOf);
+  const online = enLinea();
+  const local = online && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  return `<div class="card svc"><div class="sec-head"><h3>Encuesta del ${fmtDate(sv.created)}</h3><span class="count">${got} de ${n}</span></div>
+    <div class="bar"><span style="width:${Math.round(100 * got / n)}%"></span></div>
+    <p class="hint">${faltan.length ? 'Faltan: ' + esc(faltan.join(', ')) : 'Respondieron todos.'}</p>
+    ${online ? `<label class="f" for="lk-${sv.id}">1. Mandá este link al grupo</label><input type="text" id="lk-${sv.id}" readonly value="${esc(surveyURL(sv))}">
+    ${local ? '<p class="hint err">Este link solo abre en esta computadora. Para mandarlo, publicá Rando en internet.</p>' : ''}
+    <div class="btn-row"><button class="btn btn-sec" data-act="copyLink" data-id="${sv.id}">Copiar link</button><a class="btn btn-sec" href="${esc(waLink(surveyMessage(sv) + '\n' + surveyURL(sv)))}" target="_blank" rel="noopener">WhatsApp</a><a class="btn btn-sec" href="${esc(tgLink(surveyURL(sv), surveyMessage(sv, plain)))}" target="_blank" rel="noopener">Telegram</a></div>
+    <a class="link" href="${esc(surveyURL(sv))}" target="_blank" rel="noopener">Abrir la encuesta para probarla</a>` : '<p class="hint err">El link de esta encuesta no abre para nadie: se creó en una copia sin publicar. Publicá Rando y creá la encuesta de nuevo desde su dirección.</p>'}
+    <label class="f" for="pt-${sv.id}">2. Pegá lo que te manden (los códigos)</label><textarea id="pt-${sv.id}" placeholder="Podés pegar varios juntos, o el chat entero."></textarea>
+    <p class="hint">Las respuestas se cargan en el mismo navegador donde creaste la encuesta.</p>
+    <div class="btn-row"><button class="btn btn-main" data-act="loadCodes" data-id="${sv.id}">Cargar respuestas</button></div>
+    <button class="link danger" data-act="delSurvey" data-id="${sv.id}">${ui.armed === 'delS' + sv.id ? 'Tocá de nuevo para borrarla con sus respuestas' : 'Borrar encuesta'}</button></div>`;
+}
+
+/* ---------- Historial ---------- */
+function viewHistorial() {
+  if (!S.matches.length) return empty('Todavía no hay partidos', 'Después de armar los equipos, tocá Guardar. Ahí podés anotar el resultado de cada uno.', 'partido', 'Armar equipos');
+  return `<section><h2>Historial</h2>${S.matches.map(mt => {
+    const names = mt.names || S.settings.equipos;
+    return `<div class="card match"><div class="sec-head"><h3>${fmtDate(Date.parse(mt.date + 'T12:00:00'))}</h3><button class="link danger" data-act="delMatch" data-id="${mt.id}">${ui.armed === 'delM' + mt.id ? 'Tocá de nuevo' : 'Borrar'}</button></div>
+      ${mt.teams.map((t, i) => `<div class="mt"><span class="sw" style="background:${bib(names[i], i).bg}"></span><strong>${esc(names[i])}</strong><input type="number" min="0" max="99" inputmode="numeric" placeholder="Goles" aria-label="Goles de ${esc(names[i])}" value="${mt.score[i] != null ? mt.score[i] : ''}" data-change="score" data-id="${mt.id}" data-i="${i}"><p>${esc(t.map(nameOf).join(', '))}</p></div>`).join('')}</div>`;
+  }).join('')}</section>`;
+}
+
+/* ---------- Ajustes ---------- */
+function attrRow(a) {
+  const isRep = a.kind === 'reparto';
+  return `<div class="attr">
+    <input type="text" value="${esc(a.label)}" aria-label="Nombre del atributo" data-change="aLabel" data-id="${a.id}">
+    <input type="text" value="${esc(a.help || '')}" placeholder="Qué significa (se lee en la encuesta)" aria-label="Explicación del atributo" data-change="aHelp" data-id="${a.id}">
+    <div class="attr-opts"><select aria-label="Cómo se usa" data-change="aKind" data-id="${a.id}"><option value="nivel" ${isRep ? '' : 'selected'}>Suma al nivel</option><option value="reparto" ${isRep ? 'selected' : ''}>Se reparte parejo</option></select>
+    ${isRep ? '' : `<label class="w">Peso <input type="number" min="0" max="5" step="0.5" value="${a.weight != null ? a.weight : 1}" data-change="aW" data-id="${a.id}"></label>`}
+    <button class="link danger" data-act="delAttr" data-id="${a.id}">${ui.armed === 'delA' + a.id ? 'Tocá de nuevo' : 'Quitar'}</button></div></div>`;
+}
+function viewAjustes() {
+  const pi = ui.pendingImport;
+  return `<section><h2>Ajustes</h2>
+  <div class="card">
+    <label class="f" for="s-grupo">Nombre del grupo</label><input type="text" id="s-grupo" value="${esc(S.grupo)}" data-change="grupo">
+    <label class="f" for="s-eq0">Equipos</label><div class="two"><input type="text" id="s-eq0" value="${esc(S.settings.equipos[0])}" data-change="eq" data-i="0"><input type="text" value="${esc(S.settings.equipos[1])}" aria-label="Segundo equipo" data-change="eq" data-i="1"></div>
+    <p class="hint">Si el nombre es un color (blanco, verde, negro, rojo, azul, amarillo…), la pechera sale de ese color.</p>
+    <label class="f" for="s-umbral">Diferencia máxima entre equipos: <strong id="umbral-val">${fmt(S.settings.umbral, 2)}</strong></label>
+    <input type="range" id="s-umbral" min="0.05" max="0.5" step="0.05" value="${S.settings.umbral}" data-change="umbral" data-input="umbral">
+    <p class="hint">Más bajo, más parejos. Más alto, más variedad de una semana a otra.</p>
+  </div>
+  <h3>Qué se puntúa</h3>
+  <div class="card">${S.attrs.map(attrRow).join('')}<button class="btn btn-sec sm" data-act="addAttr" style="margin-top:12px">Agregar atributo</button>
+    <dl class="defs">
+      <dt>Suma al nivel</dt><dd>La nota entra en el puntaje de cada jugador, que es lo que se compara para que los equipos queden parejos. Va bien para técnica, físico o juego.</dd>
+      <dt>Se reparte parejo</dt><dd>La nota no cambia el puntaje del jugador. Al armar, se cuida que los dos equipos tengan un promedio parecido en eso, así no quedan todos juntos. Va bien para morfón.</dd>
+      <dt>Peso</dt><dd>Cuánto cuenta dentro del nivel. 1 es lo normal, 2 cuenta el doble.</dd>
+    </dl></div>
+  <h3>Tus datos</h3>
+  <div class="card"><p class="hint" style="margin-top:0">Todo queda en este navegador: nada se sube a ningún servidor. Descargá una copia de vez en cuando, o para pasar los datos a otro dispositivo.</p>
+    ${pi ? `<p><strong>¿Restaurar la copia?</strong> Trae ${pi.players.length} jugadores y reemplaza todo lo que hay ahora.</p><div class="btn-row"><button class="btn btn-ghost" data-act="cancelImport">Cancelar</button><button class="btn btn-main" data-act="confirmImport">Restaurar</button></div>`
+      : `<div class="btn-row"><button class="btn btn-sec" data-act="export">Descargar copia</button><label class="btn btn-sec file">Restaurar copia<input type="file" accept="application/json,.json" data-change="importFile"></label></div>`}
+    <button class="link danger" data-act="reset">${ui.armed === 'reset' ? 'Tocá de nuevo para borrar todo' : 'Borrar todo'}</button></div>
+  <h3>Cómo se calcula</h3>
+  <div class="card prose"><ol>
+    <li>Cada uno puntúa a los demás del 1 al 10 en cada atributo, salteando a los que no conoce.</li>
+    <li>La app corrige a quien puntúa a todos alto o a todos bajo, y en cada jugador descarta las notas más extremas, para que un rencor o un amigo no pesen de más.</li>
+    <li>Con pocas evaluaciones, el nivel se apoya en el puntaje manual (o en el promedio del grupo) y se muestra en gris.</li>
+    <li>Para armar, prueba todas las divisiones posibles, se queda con las que entran en la diferencia máxima y elige una al azar, cuidando que los atributos y los arqueros queden repartidos y que no se repita el último partido.</li>
+  </ol></div>
+  </section>`;
+}
+
+/* ---------- Encuesta (lado de cada jugador) ---------- */
+let SV = null;
+function surveyState(P) {
+  const np = P.p.length, na = P.a.length, key = 'ep-enc-' + P.s;
+  let st = null;
+  try { st = JSON.parse(store.get(key) || 'null'); } catch (e) { st = null; }
+  if (!st || !Array.isArray(st.vals) || st.vals.length !== np * na) st = { step: 0, me: null, unk: [], vals: new Array(np * na).fill(0) };
+  if (st.me == null) st.step = 0;
+  return Object.assign({ P, key }, st);
+}
+function saveSV() { store.set(SV.key, JSON.stringify({ step: SV.step, me: SV.me, unk: SV.unk, vals: SV.vals })); }
+function svTargets() { return SV.P.p.map((_, i) => i).filter(i => i !== SV.me && !SV.unk.includes(i)); }
+function svCountText(ai) {
+  const na = SV.P.a.length, idx = svTargets();
+  const done = idx.filter(i => SV.vals[i * na + ai] > 0).length;
+  return `Del 1 al 10, comparando dentro del grupo. Llevás ${done} de ${idx.length}.`;
+}
+function svCode() {
+  const P = SV.P, np = P.p.length, na = P.a.length;
+  let s = '';
+  for (let i = 0; i < np; i++) for (let a = 0; a < na; a++) {
+    const v = (i === SV.me || SV.unk.includes(i)) ? 0 : (SV.vals[i * na + a] | 0);
+    s += v === 10 ? 'A' : String(v);
+  }
+  return makeCode(P.s, SV.me, s);
+}
+function svMessage() { return `Mis puntajes para ${SV.P.g}\n${svCode()}`; }
+
+function svWho() {
+  const P = SV.P;
+  let h = `<section><h2>¿Quién sos?</h2><p class="lead">Elegí tu nombre. A vos no te vas a puntuar.</p><div class="chips">` +
+    P.p.map((n, i) => `<button class="chip" data-act="svMe" data-i="${i}" aria-pressed="${SV.me === i}">${esc(n)}</button>`).join('') + `</div>`;
+  if (SV.me != null) {
+    h += `<h3>¿A quién no viste jugar?</h3><p class="hint">Tocalos y no te los pregunta. Mejor no puntuar que adivinar.</p><div class="chips" style="margin-top:10px">` +
+      P.p.map((n, i) => i === SV.me ? '' : `<button class="chip chip-x" data-act="svUnk" data-i="${i}" aria-pressed="${SV.unk.includes(i)}">${esc(n)}</button>`).join('') + `</div>`;
+  }
+  return h + `<div class="sticky"><button class="btn btn-main" data-act="svNext" ${SV.me == null ? 'disabled' : ''}>Empezar</button></div></section>`;
+}
+function svAttr(ai) {
+  const P = SV.P, na = P.a.length;
+  const [label, help] = P.a[ai];
+  const idx = svTargets();
+  return `<section><h2>${esc(label)}</h2>${help ? `<p class="lead">${esc(help)}</p>` : ''}
+    <p class="hint" id="sv-count">${svCountText(ai)}</p>
+    <div>${idx.map(i => {
+      const v = SV.vals[i * na + ai];
+      return `<div class="q"><div class="qn">${esc(P.p[i])}</div><div class="rate" role="group" aria-label="${esc(label)} de ${esc(P.p[i])}">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(x => `<button data-act="svRate" data-i="${i}" data-v="${x}" aria-pressed="${v === x}">${x}</button>`).join('')}</div></div>`;
+    }).join('')}</div>
+    <div class="sticky btn-row"><button class="btn btn-sec" data-act="svBack">Atrás</button><button class="btn btn-main" data-act="svNext">${ai === na - 1 ? 'Terminar' : 'Siguiente'}</button></div></section>`;
+}
+function svSend() {
+  const P = SV.P, na = P.a.length, idx = svTargets();
+  const rated = idx.filter(i => { for (let a = 0; a < na; a++) if (SV.vals[i * na + a] > 0) return true; return false; }).length;
+  const waUrl = waLink(svMessage(), P.w || '');
+  return `<section><h2>Listo, falta mandarlo</h2>
+    <p class="lead">Puntuaste a ${rated} de ${idx.length}. ${P.w ? 'El botón abre el chat con quien organiza, con el código ya escrito.' : 'El botón abre WhatsApp con el código ya escrito: mandáselo a quien organiza.'}</p>
+    <a class="btn btn-main" href="${esc(waUrl)}" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+    <div class="btn-row"><a class="btn btn-sec" href="${esc(tgLink(baseURL(), svMessage()))}" target="_blank" rel="noopener">Telegram</a><button class="btn btn-sec" data-act="svCopy">Copiar código</button></div>
+    <p class="code">${esc(svCode())}</p>
+    <p class="hint">La app de quien organiza no muestra puntajes uno por uno: los combina con los del resto.</p>
+    <button class="link" data-act="svBack">Revisar mis puntajes</button></section>`;
+}
+function renderSurvey(P) {
+  if (!SV || SV.P.s !== P.s) SV = surveyState(P);
+  const na = P.a.length, total = na + 2;
+  const step = Math.min(SV.step, na + 1);
+  const body = step === 0 ? svWho() : step <= na ? svAttr(step - 1) : svSend();
+  app.innerHTML = `<header class="top"><h1>${esc(P.g)}</h1></header>
+    <main class="encuesta"><div class="pasos"><span>Paso ${step + 1} de ${total}</span><div class="bar"><span style="width:${Math.round(100 * (step + 1) / total)}%"></span></div></div>${body}
+    <p class="hint pie"><a href="${esc(baseURL())}">¿Organizás vos? Abrí Rando</a></p></main>`;
+}
+
+/* ---------- Render principal ---------- */
+const TABS = [['partido', '⚽', 'Partido'], ['jugadores', '👥', 'Jugadores'], ['encuesta', '📝', 'Encuesta'], ['historial', '📅', 'Historial'], ['ajustes', '⚙️', 'Ajustes']];
+const VIEWS = { partido: viewPartido, jugadores: viewJugadores, encuesta: viewEncuesta, historial: viewHistorial, ajustes: viewAjustes };
+function header() {
+  const d = !!S.settings.discreto;
+  return `<header class="top"><div class="top-t"><h1 id="grupo-h1">${esc(S.grupo)}</h1><button class="fecha-btn" id="fecha-btn" data-act="pickDate" aria-label="Fecha del partido: ${esc(fechaHeader(S.fecha))}. Tocá para cambiarla">${esc(fechaHeader(S.fecha))} ▾</button><input type="date" class="fecha-in" id="fecha-in" value="${S.fecha}" tabindex="-1" aria-hidden="true" data-change="fecha"></div><button class="icon-btn" data-act="discreto" aria-pressed="${d}" aria-label="${d ? 'Mostrar los puntajes de los jugadores' : 'Ocultar los puntajes de los jugadores'}" title="${d ? 'Mostrar los puntajes de los jugadores' : 'Ocultar los puntajes de los jugadores'}">${d ? '🙈' : '👁️'}</button></header>` +
+    (enLinea() ? '' : `<p class="aviso">Esta copia de Rando no está publicada en internet: los links de la encuesta no abren en otros celulares. Publicala y usala desde su dirección.</p>`) +
+    (persiste ? '' : `<p class="aviso">Este navegador no está guardando datos: lo que cargues se pierde al cerrar. Probá abrirla en Chrome o Safari, fuera de la navegación privada.</p>`);
+}
+function render() {
+  const h = location.hash || '';
+  const lk = h.match(/^#([re])=(.+)$/);
+  if (lk) {
+    let P = null;
+    try { P = lk[1] === 'r' ? decodeSurvey(lk[2]) : JSON.parse(b64d(lk[2])); } catch (e) { P = null; }
+    document.body.classList.remove('discreto');
+    if (!P || !P.s || !Array.isArray(P.p) || !Array.isArray(P.a) || !P.p.length || !P.a.length) {
+      app.innerHTML = `<header class="top"><h1>Encuesta</h1></header><main class="encuesta">${empty('El link llegó incompleto', 'Pedile a quien organiza que lo vuelva a mandar, y abrilo tocándolo directo desde WhatsApp.')}</main>`;
+      return;
+    }
+    document.title = P.g === DEFAULT_GRUPO ? DEFAULT_GRUPO : P.g + ' · ' + DEFAULT_GRUPO;
+    return renderSurvey(P);
+  }
+  document.title = 'Rando';
+  document.body.classList.toggle('discreto', !!S.settings.discreto);
+  const sc = computeScores(S);
+  app.innerHTML = header() + `<main>${VIEWS[ui.view](sc)}</main>` +
+    `<nav class="nav" aria-label="Secciones">${TABS.map(([id, ic, label]) => `<button data-act="tab" data-id="${id}" ${ui.view === id ? 'aria-current="page"' : ''}><span class="ico" aria-hidden="true">${ic}</span>${label}</button>`).join('')}</nav>`;
+}
+
+/* ---------- Acciones (clicks) ---------- */
+const act = {
+  tab(d) { ui.view = d.id; ui.open = null; ui.armed = null; render(); window.scrollTo(0, 0); },
+  pickDate() {
+    const i = document.getElementById('fecha-in');
+    if (!i) return;
+    try { i.showPicker(); } catch (e) { i.focus(); i.click(); }
+  },
+  discreto() { S.settings.discreto = !S.settings.discreto; save(); render(); },
+
+  toggleSel(d) {
+    const i = S.selected.indexOf(d.id);
+    if (i >= 0) S.selected.splice(i, 1); else S.selected.push(d.id);
+    save(); render();
+  },
+  clearSel() { S.selected = []; ui.current = null; save(); render(); },
+  toggleOthers() { ui.showOthers = !ui.showOthers; render(); },
+  toggleGuest() { ui.guestOpen = !ui.guestOpen; render(); if (ui.guestOpen) { const g = document.getElementById('g-name'); if (g) g.focus(); } },
+  addGuest() {
+    const name = (document.getElementById('g-name').value || '').trim();
+    if (!name) { toast('Escribí el nombre del invitado'); return; }
+    const lv = num(document.getElementById('g-lvl').value);
+    const ex = S.players.find(p => norm(p.name) === norm(name));
+    if (ex) {
+      if (!S.selected.includes(ex.id)) S.selected.push(ex.id);
+      toast(`${ex.name} ya estaba en la lista: lo sumé`);
+    } else {
+      const p = { id: rid(8), name, base: lv != null ? clamp(lv, 1, 10) : null, gk: false, regular: false };
+      S.players.push(p); S.selected.push(p.id);
+      toast(`${name} sumado`);
+    }
+    ui.guestOpen = false; ui.showOthers = true; save(); render();
+  },
+  generate() {
+    const ids = S.selected.filter(id => playerById(id));
+    if (ids.length < 4 || ids.length > MAX_PLAYERS) return;
+    const sc = computeScores(S);
+    const last = S.matches[0] ? S.matches[0].teams : null;
+    ui.current = Object.assign(makeTeams(ids, sc, S, { last }), { manual: false, saved: false });
+    ui.swapSel = null; ui.anim = true; render(); ui.anim = false;
+    const r = document.querySelector('.resultado');
+    if (r) r.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  },
+  reroll() {
+    const c = ui.current;
+    const ids = S.selected.filter(id => playerById(id));
+    if (ids.length < 4 || ids.length > MAX_PLAYERS) return;
+    const same = c && !c.manual && c.ids.length === ids.length && c.ids.every((id, i) => id === ids[i]);
+    const sc = computeScores(S);
+    const last = S.matches[0] ? S.matches[0].teams : null;
+    ui.current = Object.assign(makeTeams(ids, sc, S, { last, avoid: same ? c.mask : null }), { manual: false, saved: false });
+    ui.swapSel = null; ui.anim = true; render(); ui.anim = false;
+  },
+  swap(d) {
+    const c = ui.current;
+    if (!c) return;
+    const side = id => (c.teams[0].includes(id) ? 0 : 1);
+    if (!ui.swapSel || ui.swapSel === d.id) { ui.swapSel = ui.swapSel === d.id ? null : d.id; render(); return; }
+    const a = ui.swapSel, b = d.id, sa = side(a), sb = side(b);
+    if (sa === sb) { ui.swapSel = b; render(); return; }
+    c.teams[sa][c.teams[sa].indexOf(a)] = b;
+    c.teams[sb][c.teams[sb].indexOf(b)] = a;
+    c.manual = true; c.saved = false; ui.swapSel = null; render();
+  },
+  async copyTeams() {
+    if (!ui.current) return;
+    const ok = await copy(currentTeamsMessage(computeScores(S)));
+    toast(ok ? 'Equipos copiados: pegalos donde quieras' : 'No pude copiar el texto');
+  },
+  saveMatch() {
+    const c = ui.current;
+    if (!c || c.saved) return;
+    S.matches.unshift({ id: rid(8), date: S.fecha, teams: c.teams.map(t => t.slice()), names: S.settings.equipos.slice(), score: [null, null] });
+    c.saved = true; save(); render(); toast('Partido guardado en el historial');
+  },
+
+  sort() { ui.sortBy = ui.sortBy === 'nivel' ? 'nombre' : 'nivel'; render(); },
+  toggleImport() { ui.importing = !ui.importing; render(); },
+  doImport() {
+    const items = parseList(document.getElementById('imp').value);
+    if (!items.length) { toast('No encontré nombres en el texto'); return; }
+    const r = importList(items, S);
+    ui.importing = false; save(); render();
+    const nu = `${r.nuevos} ${r.nuevos === 1 ? 'jugador nuevo' : 'jugadores nuevos'}`, ac = `${r.act} ${r.act === 1 ? 'actualizado' : 'actualizados'}`;
+    toast(r.act === 0 ? nu : r.nuevos === 0 ? ac : `${nu}, ${ac}`);
+  },
+  addPlayer() {
+    const ne = document.getElementById('np-name'), be = document.getElementById('np-base');
+    const name = (ne.value || '').trim();
+    if (!name) { toast('Escribí un nombre'); ne.focus(); return; }
+    if (S.players.some(p => norm(p.name) === norm(name))) { toast(`${name} ya está en la lista`); return; }
+    const b = num(be.value);
+    S.players.push({ id: rid(8), name, base: b != null ? clamp(b, 1, 10) : null, gk: false, regular: true });
+    save(); render(); toast(`${name} agregado`);
+    const n2 = document.getElementById('np-name');
+    if (n2) n2.focus();
+  },
+  openP(d) { ui.open = ui.open === d.id ? null : d.id; ui.armed = null; render(); },
+  delP(d) {
+    if (!armed('delP' + d.id)) return;
+    S.players = S.players.filter(p => p.id !== d.id);
+    S.selected = S.selected.filter(id => id !== d.id);
+    if (ui.current && ui.current.ids.includes(d.id)) ui.current = null;
+    ui.open = null; save(); render(); toast('Jugador borrado');
+  },
+
+  startSurvey() { if (!enLinea()) return; ui.newSurvey = { players: S.players.filter(p => p.regular).map(p => p.id), attrs: S.attrs.map(a => a.id) }; render(); },
+  cancelSurvey() { ui.newSurvey = null; render(); },
+  nsP(d) { const l = ui.newSurvey.players, i = l.indexOf(d.id); if (i >= 0) l.splice(i, 1); else l.push(d.id); render(); },
+  nsA(d) { const l = ui.newSurvey.attrs, i = l.indexOf(d.id); if (i >= 0) l.splice(i, 1); else l.push(d.id); render(); },
+  createSurvey() {
+    if (!enLinea()) { toast('Publicá Rando en internet para crear encuestas'); return; }
+    const ns = ui.newSurvey;
+    const tel = document.getElementById('ns-tel');
+    if (tel) S.settings.tel = normalizarTel(tel.value);
+    const players = S.players.filter(p => ns.players.includes(p.id)).sort(byName);
+    const attrs = S.attrs.filter(a => ns.attrs.includes(a.id));
+    if (players.length < 3) { toast('Elegí al menos 3 jugadores'); return; }
+    if (!attrs.length) { toast('Elegí al menos un atributo'); return; }
+    const sv = { id: rid(6), created: Date.now(), playerIds: players.map(p => p.id), attrIds: attrs.map(a => a.id), responses: {} };
+    sv.v2 = true;
+    sv.payload = encodeSurvey({ s: sv.id, g: S.grupo, p: players.map(p => p.name), a: attrs, w: S.settings.tel });
+    S.surveys.unshift(sv);
+    ui.newSurvey = null; save(); render(); toast('Encuesta creada: mandá el link al grupo');
+  },
+  async copyLink(d) {
+    const sv = S.surveys.find(s => s.id === d.id);
+    if (!sv) return;
+    const ok = await copy(surveyURL(sv));
+    toast(ok ? 'Link copiado' : 'No pude copiar: mantené apretado el link para copiarlo');
+  },
+  loadCodes(d) {
+    const ta = document.getElementById('pt-' + d.id);
+    const r = loadResponses(ta ? ta.value : '', S);
+    if (!r.ok && !r.bad && !r.otra) { toast('No encontré códigos en el texto'); return; }
+    save(); render();
+    const parts = [`${r.ok} ${r.ok === 1 ? 'respuesta cargada' : 'respuestas cargadas'}`];
+    if (r.bad) parts.push(`${r.bad} ${r.bad === 1 ? 'código roto' : 'códigos rotos'}`);
+    if (r.otra) parts.push(`${r.otra} de otra encuesta`);
+    toast(parts.join(', '));
+  },
+  delSurvey(d) {
+    if (!armed('delS' + d.id)) return;
+    S.surveys = S.surveys.filter(s => s.id !== d.id);
+    save(); render(); toast('Encuesta borrada');
+  },
+
+  delMatch(d) {
+    if (!armed('delM' + d.id)) return;
+    S.matches = S.matches.filter(mt => mt.id !== d.id);
+    save(); render(); toast('Partido borrado');
+  },
+
+  addAttr() { S.attrs.push({ id: rid(4), label: 'Nuevo atributo', help: '', kind: 'nivel', weight: 1 }); save(); render(); },
+  delAttr(d) {
+    if (S.attrs.length <= 1) { toast('Tiene que quedar al menos un atributo'); return; }
+    if (!armed('delA' + d.id)) return;
+    S.attrs = S.attrs.filter(a => a.id !== d.id);
+    save(); render();
+  },
+  export() {
+    const blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `rando-${todayISO()}.json`;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('Copia descargada');
+  },
+  confirmImport() {
+    if (!ui.pendingImport) return;
+    S = hydrate(ui.pendingImport);
+    ui.pendingImport = null; ui.current = null; save(); render(); toast('Copia restaurada');
+  },
+  cancelImport() { ui.pendingImport = null; render(); },
+  reset() {
+    if (!armed('reset')) return;
+    S = initialState(); ui.current = null; save(); render(); toast('Datos borrados');
+  },
+
+  // Encuesta del jugador
+  svMe(d) { SV.me = +d.i; SV.unk = SV.unk.filter(x => x !== SV.me); saveSV(); render(); },
+  svUnk(d) { const i = +d.i, k = SV.unk.indexOf(i); if (k >= 0) SV.unk.splice(k, 1); else SV.unk.push(i); saveSV(); render(); },
+  svNext() { if (SV.me == null) return; SV.step = Math.min(SV.step + 1, SV.P.a.length + 1); saveSV(); render(); window.scrollTo(0, 0); },
+  svBack() { SV.step = Math.max(0, Math.min(SV.step, SV.P.a.length + 1) - 1); saveSV(); render(); window.scrollTo(0, 0); },
+  svRate(d, el) {
+    const na = SV.P.a.length, ai = SV.step - 1, k = +d.i * na + ai, v = +d.v;
+    SV.vals[k] = SV.vals[k] === v ? 0 : v;
+    saveSV();
+    el.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === SV.vals[k])));
+    const c = document.getElementById('sv-count');
+    if (c) c.textContent = svCountText(ai);
+  },
+  async svCopy() {
+    const ok = await copy(svCode());
+    toast(ok ? 'Código copiado' : 'No pude copiar: mantené apretado el código');
+  },
+};
+
+/* ---------- Cambios en campos (sin re-render, para no perder el toque siguiente) ---------- */
+const chg = {
+  pname(el) {
+    const p = playerById(el.dataset.id), v = el.value.trim();
+    if (!p || !v) return;
+    p.name = v; save();
+    const n = document.getElementById('nm-' + p.id);
+    if (n) n.textContent = v + (p.gk ? ' 🧤' : '');
+  },
+  pbase(el) {
+    const p = playerById(el.dataset.id);
+    if (!p) return;
+    const v = num(el.value);
+    p.base = v != null ? clamp(v, 1, 10) : null; save();
+    const s = document.getElementById('sc-' + p.id);
+    if (s) s.textContent = fmt(computeScores(S).byId[p.id].nivel);
+  },
+  pgk(el) { const p = playerById(el.dataset.id); if (p) { p.gk = el.checked; save(); render(); } },
+  preg(el) { const p = playerById(el.dataset.id); if (p) { p.regular = el.checked; save(); render(); } },
+  fecha(el) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(el.value)) { S.fecha = el.value; save(); }
+    render();
+  },
+  grupo(el) { const v = el.value.trim(); if (!v) return; S.grupo = v; save(); const h = document.getElementById('grupo-h1'); if (h) h.textContent = v; },
+  eq(el) { const v = el.value.trim(); if (v) { S.settings.equipos[+el.dataset.i] = v; save(); } },
+  umbral(el) { S.settings.umbral = clamp(+el.value, 0.05, 0.5); save(); },
+  tel(el) { const t = normalizarTel(el.value); S.settings.tel = t; el.value = t; save(); },
+  aLabel(el) { const a = S.attrs.find(x => x.id === el.dataset.id), v = el.value.trim(); if (a && v) { a.label = v; save(); } },
+  aHelp(el) { const a = S.attrs.find(x => x.id === el.dataset.id); if (a) { a.help = el.value.trim(); save(); } },
+  aKind(el) { const a = S.attrs.find(x => x.id === el.dataset.id); if (a) { a.kind = el.value === 'reparto' ? 'reparto' : 'nivel'; save(); render(); } },
+  aW(el) { const a = S.attrs.find(x => x.id === el.dataset.id), v = num(el.value); if (a) { a.weight = v != null ? clamp(v, 0, 5) : 1; save(); } },
+  score(el) {
+    const mt = S.matches.find(x => x.id === el.dataset.id);
+    if (!mt) return;
+    const v = el.value === '' ? null : parseInt(el.value, 10);
+    mt.score[+el.dataset.i] = v != null && isFinite(v) ? Math.max(0, v) : null; save();
+  },
+  importFile(el) {
+    const f = el.files && el.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const s = JSON.parse(r.result);
+        if (!s || !Array.isArray(s.players) || !Array.isArray(s.attrs)) throw new Error('formato');
+        ui.pendingImport = s; render();
+      } catch (e) { toast('Ese archivo no es una copia de esta app'); }
+    };
+    r.readAsText(f);
+    el.value = '';
+  },
+};
+
+/* ---------- Arranque ---------- */
+function boot() {
+  app = document.getElementById('app');
+  persiste = store.set('ep-prueba', '1');
+  store.del('ep-prueba');
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    const f = act[el.dataset.act];
+    if (f) { e.preventDefault(); f(el.dataset, el, e); }
+  });
+  document.addEventListener('change', e => {
+    const el = e.target.closest('[data-change]');
+    if (el && chg[el.dataset.change]) chg[el.dataset.change](el, e);
+  });
+  document.addEventListener('input', e => {
+    const d = e.target.dataset || {};
+    if (d.input === 'umbral') {
+      const o = document.getElementById('umbral-val');
+      if (o) o.textContent = fmt(+e.target.value, 2);
+    }
+    if (d.input === 'tel') {
+      const o = document.getElementById('tel-ok');
+      if (o) o.textContent = telOk(normalizarTel(e.target.value));
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.dataset && e.target.dataset.enter && act[e.target.dataset.enter]) {
+      e.preventDefault();
+      act[e.target.dataset.enter]({}, e.target, e);
+    }
+  });
+  window.addEventListener('hashchange', () => { SV = null; render(); window.scrollTo(0, 0); });
+  render();
+}
+if (typeof document !== 'undefined' && document.getElementById('app')) boot();
+</script>
+</body>
+</html>
